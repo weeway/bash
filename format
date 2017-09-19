@@ -1,0 +1,14 @@
+#!/bin/bash
+
+format=""
+while read var; do
+    if [ -z $format ]; then
+        format=$var
+    else
+        if [ -n $(echo $var | sed -e "s/\s+//g") ]; then
+            format="$format,$var"
+        fi
+    fi
+done
+
+echo $format

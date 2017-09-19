@@ -1,0 +1,9 @@
+#!/bin/bash
+
+search_dir=$1
+echo $search_dir
+for entry in "$search_dir"/*
+do
+  #echo "$entry"
+    mv $entry ${entry//.data/.sql}
+done

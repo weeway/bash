@@ -1,0 +1,59 @@
+#!/bin/sh
+
+# Usage info
+show_help() {
+
+# ${variable//pattern/replacement/} substitue
+cat << EOF
+Usage: ${0//*\//} [-hi] [-d directory] [-c context] <-s search>
+Search specifid directory with specified pattern. Implemented by compose command 'find' and 'egrep'
+    -h          display this help and exit
+    -d dir      the directory you want to search. default current directory
+    -s search   required. the pattten of content you want to search
+    -c context  specified the context the egrep command will show. default is 1
+    -i          ignore case. default case-sensitive
+EOF
+}
+
+# Initialize our own variables:
+directory='.'
+context=1
+search=''
+ignore=''
+
+OPTIND=1
+# Resetting OPTIND is necessary if getopts was used previously in the script.
+# It is a good idea to make OPTIND local if you process options in a function.
+
+while getopts his:c::d:: opt; do
+    case $opt in
+        h)
+            show_help
+            exit 0
+            ;;
+        s)  search=$OPTARG
+            ;;
+        d)  directory=$OPTARG
+            ;;
+        c)  context=$OPTARG
+            ;;
+        i)  ignore='-i'
+            ;;
+        *)
+            show_help >&2
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND-1))"   # Discard the options and sentinel --
+
+if [[ -z $search ]]
+    then 
+        show_help
+fi
+# Search specified directory for certain pattern
+
+find $directory -type f -exec egrep $search -H -n --binary-files=without-match --color -C $context $ignore {} \;
+
+# End of file
+

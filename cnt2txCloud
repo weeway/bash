@@ -1,0 +1,2 @@
+#! /bin/bash
+ssh ubuntu@182.254.157.204

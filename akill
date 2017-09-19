@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# Usage info
+show_help(){
+
+cat << EOF
+Usage: ${0//*\//} <-s process>
+Kill processes that match the name[*process] specified by regex
+    -s process      related name that process you want to kill
+    -h help         show help info 
+EOF
+}
+
+# Initialize our own variables:
+search=''
+
+OPTIND=1
+# Resetting OPTIND is necessary if getopts was used previously in the script.
+# It is a good idea to make OPTIND local if you process options in a function.
+
+while getopts his:c::d:: opt; do
+    case $opt in
+        h)
+            show_help
+            exit 0
+            ;;
+        s)  search=$OPTARG
+            ;;
+        *)
+            show_help >&2
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND-1))"   # Discard the options and sentinel --
+
+if [[ -z $search ]]
+    then
+        show_help
+fi
+
+sudo kill $(ps -ef | egrep -i "$search" | awk '{print $2}')
