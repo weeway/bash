@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# Usage info
+show_help() {
+
+# ${variable//pattern/replacement/} substitue
+cat << EOF
+Usage: ${0//*\//} [-h] <-p projectname>
+Create a git repository for deploying web project
+    -h          display this help and exit
+    -p         web project name
+EOF
+}
+
+# Initialize our own variables:
+poj=''
+
+OPTIND=1
+# Resetting OPTIND is necessary if getopts was used previously in the script.
+# It is a good idea to make OPTIND local if you process options in a function.
+
+while getopts hp: opt; do
+    case $opt in
+        h)
+            show_help
+            exit 0
+            ;;
+        p)  poj=$OPTARG
+            ;;
+        \?)
+            show_help >&2
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND-1))"   # Discard the options and sentinel --
+
+if [ -z $poj ]; then
+    echo "Must set -p param"
+    show_help
+    exit 1
+fi
+
+CUR=$(pwd)
+FROM=$poj"-docker-bare"
+TO=$poj"-docker"
+
+
+# Test whether $from dir exsist
+
+if [ -d $CUR/$FROM ]; then
+    echo "Directory $FROM exsisted"
+    exit 0
+fi
+
+
+# Init bare repository
+# And add post-receive hook to the bare repository
+
+mkdir $FROM
+cd $FROM
+git init --bare
+cd hooks
+touch post-receive
+cat <<EOF >post-receive
+#!/bin/bash
+#
+# An example hook script to prepare a packed repository for use over
+# dumb transports.
+#
+# To enable this hook, rename this file to "post-update".
+
+#exec git update-server-info
+unset GIT_DIR
+
+CURRENT_PATH=$CUR/$FROM
+DEPLOY_PATH=$CUR/$TO
+
+if [ ! -d "\$DEPLOY_PATH" ]; then
+    mkdir \$DEPLOY_PATH
+    git clone \$CURRENT_PATH \$DEPLOY_PATH
+fi
+
+cd \$DEPLOY_PATH
+git fetch --all
+git reset --hard origin/master
+
+cd \$CURRENT_PATH
+exit 0
+EOF
+
+chmod +x post-receive
+
+cat <<EOF
+
+Now you can clone git repository:
+    git clone git@blog.weeway.tk:$CUR/$FROM
+
+then push your code, enjoy it ~
+EOF
