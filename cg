@@ -7,7 +7,7 @@ show_help() {
 cat << EOF
 Usage: ${0//*\//} [-h] <-p projectname>
 Create a git repository for deploying web project
-    -h          display this help and exit
+    -h         display this help and exit
     -p         web project name
 EOF
 }
@@ -25,9 +25,18 @@ while getopts hp: opt; do
             show_help
             exit 0
             ;;
-        p)  poj=$OPTARG
+        p)  
+            poj=$OPTARG
             ;;
-        \?)
+        ?)  # option not defined
+            show_help >&2
+            exit 1
+            ;;
+        :)  # option required param
+            show_help >&2
+            exit 1
+            ;;
+        --) # end of options
             show_help >&2
             exit 1
             ;;
